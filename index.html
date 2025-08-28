@@ -1,0 +1,659 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Malzz Crash — Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg1:#071018;
+    --card: rgba(10,10,10,0.72);
+    --glass: rgba(255,255,255,0.03);
+    --accent:#ff3b3b;
+    --accent2:#ff7b7b;
+    --muted:#bfc3c7;
+    --gold:#ffd54a;
+    --success:#4CAF50;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{
+    margin:0;
+    font-family:"Poppins",system-ui,Arial;
+    color:#eaeaea;
+    background:linear-gradient(120deg,#031021 0%, #07202b 40%, #04111a 100%);
+  }
+
+  /* Aurora gradient animation */
+  .aurora {
+    position:fixed; inset:0; z-index:-3;
+    background: radial-gradient(circle at 10% 30%, rgba(255,80,120,0.14), transparent 12%),
+                radial-gradient(circle at 80% 20%, rgba(0,220,200,0.12), transparent 12%),
+                radial-gradient(circle at 50% 80%, rgba(120,100,255,0.10), transparent 12%);
+    animation: moveAurora 12s ease-in-out infinite alternate;
+    filter: blur(40px) saturate(120%);
+  }
+  @keyframes moveAurora{
+    0%{transform:translate3d(-6%,0,0) scale(1)}
+    100%{transform:translate3d(6%,0,0) scale(1.04)}
+  }
+
+  /* Stars particle layer */
+  .stars { position:fixed; inset:0; pointer-events:none; z-index:-2; }
+  .star {
+    position:absolute;
+    background:rgba(255,255,255,0.85);
+    border-radius:50%;
+    opacity:0.85;
+    mix-blend-mode:screen;
+    box-shadow:0 0 6px rgba(255,255,255,.08);
+    animation: twinkle 5s linear infinite;
+  }
+  @keyframes twinkle { 0%{opacity:.6}50%{opacity:1}100%{opacity:.6} }
+
+  /* Layout */
+  .wrap {
+    position:relative;
+    width:100%;
+    min-height:100%;
+    display:flex;
+    align-items:flex-start;
+    justify-content:center;
+    padding:28px;
+  }
+  .panel {
+    width:100%;
+    max-width:1100px;
+    display:grid;
+    gap:20px;
+    grid-template-columns: 1fr 420px;
+    align-items:start;
+    z-index:1;
+  }
+
+  /* Left main column */
+  .main {
+    display:flex;
+    flex-direction:column;
+    gap:18px;
+  }
+
+  /* Right column */
+  .side {
+    display:flex;
+    flex-direction:column;
+    gap:18px;
+  }
+
+  /* Cards */
+  .card {
+    background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(0,0,0,0.4));
+    border-radius:14px;
+    padding:18px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.55);
+    border:1px solid var(--glass);
+    backdrop-filter: blur(6px);
+  }
+
+  h1{font-size:28px; margin:0; font-weight:800;
+    background:linear-gradient(90deg,var(--accent),var(--accent2));
+    -webkit-background-clip:text; -webkit-text-fill-color:transparent;
+    letter-spacing:0.6px;
+  }
+  .muted{color:var(--muted); font-size:13px}
+
+  /* form controls */
+  input, select, textarea {
+    width:100%;
+    padding:12px 14px;
+    margin-top:10px;
+    border-radius:10px;
+    border:1px solid rgba(255,255,255,0.04);
+    background:rgba(0,0,0,0.45);
+    color:#fff;
+    outline:none;
+    font-size:14px;
+  }
+  textarea{min-height:120px; resize:vertical}
+
+  .row{display:flex; gap:10px; align-items:center; flex-wrap:wrap}
+  .btn {
+    padding:12px 14px;
+    border-radius:10px;
+    border:none;
+    cursor:pointer;
+    background:linear-gradient(90deg,var(--accent),var(--accent2));
+    color:white;
+    font-weight:700;
+    box-shadow:0 8px 30px rgba(255,59,59,0.12);
+  }
+  .btn.ghost{ background:transparent; border:1px solid rgba(255,255,255,0.06); box-shadow:none; color:var(--muted); font-weight:600}
+  .btn.danger{ background:linear-gradient(90deg,#ff6b6b,#ff3b3b) }
+
+  /* status / progress */
+  .status{
+    margin-top:12px;
+    padding:12px;
+    border-radius:10px;
+    background:linear-gradient(90deg, rgba(255,255,255,0.02), rgba(0,0,0,0.04));
+    color:var(--muted);
+    border-left:4px solid rgba(255,59,59,0.5);
+  }
+  
+  .status.status-success {
+    color: #e8f5e9;
+    border-left-color: var(--success);
+    background:linear-gradient(90deg, rgba(76,175,80,0.08), rgba(0,0,0,0.04));
+  }
+
+  .progress {
+    width:100%; height:12px; background:rgba(255,255,255,0.04); border-radius:999px; overflow:hidden;margin-top:10px;
+    border:1px solid rgba(255,255,255,0.02);
+  }
+  .progress > i { display:block; height:100%; width:0%; background:linear-gradient(90deg,var(--accent),var(--accent2)); transition:width .3s linear; }
+
+  /* user table */
+  table{width:100%; border-collapse:collapse; margin-top:10px;}
+  th,td{padding:10px 8px; text-align:left; font-size:14px; color:#eee}
+  thead th{color:var(--gold); font-weight:700; font-size:13px;}
+  tbody tr:hover{background:rgba(255,255,255,0.02);}
+
+  /* modals */
+  .modal {
+    position:fixed; inset:0; display:none; align-items:center; justify-content:center; z-index:50;
+    background:linear-gradient(rgba(2,6,10,0.6), rgba(2,6,10,0.6));
+    backdrop-filter: blur(6px);
+  }
+  .modal.show{display:flex}
+  .modal-card {
+    width:100%; max-width:420px; background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(0,0,0,0.6));
+    padding:18px; border-radius:12px; border:1px solid rgba(255,255,255,0.03);
+    transform: translateY(6px) scale(.98);
+    animation: modalIn .26s cubic-bezier(.2,.9,.3,1) forwards;
+  }
+  @keyframes modalIn { to { transform:translateY(0) scale(1); } }
+
+  /* Scrollbar styling */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  ::-webkit-scrollbar-track {
+    background: rgba(255,255,255,0.05);
+    border-radius: 4px;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: var(--accent);
+    border-radius: 4px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--accent2);
+  }
+
+  /* New success animations */
+  .success-pulse {
+    animation: pulseSuccess 2s ease-out;
+  }
+
+  @keyframes pulseSuccess {
+    0% { box-shadow: 0 0 0 0 rgba(76, 175, 80, 0.7); }
+    70% { box-shadow: 0 0 0 15px rgba(76, 175, 80, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(76, 175, 80, 0); }
+  }
+
+  .success-message {
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(46, 125, 50, 0.9);
+    color: white;
+    padding: 12px 24px;
+    border-radius: 30px;
+    font-weight: 600;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+    z-index: 100;
+    opacity: 0;
+    transition: opacity 0.3s;
+    backdrop-filter: blur(5px);
+    border: 1px solid rgba(255,255,255,0.1);
+  }
+
+  .success-message.show {
+    opacity: 1;
+  }
+
+  /* responsive */
+  @media (max-width:980px){
+    .panel{grid-template-columns: 1fr; padding:18px}
+    .side{order:2}
+    .wrap {
+      padding: 18px;
+    }
+  }
+</style>
+</head>
+<body>
+  <div class="aurora" aria-hidden="true"></div>
+  <div class="stars" aria-hidden="true"></div>
+
+  <!-- background music (local file) -->
+  <audio id="bgMusic" autoplay loop>
+    <source src="stecustecu.mp3" type="audio/mpeg">
+  </audio>
+
+  <div class="wrap">
+    <div class="panel" role="main" aria-label="Dashboard">
+      <!-- LEFT: Main features -->
+      <div class="main">
+        <!-- Header -->
+        <div class="card">
+          <div style="display:flex; justify-content:space-between; align-items:center; gap:12px">
+            <div>
+              <h1>MALZZ CRASH</h1>
+              <div class="muted" id="subInfo">Masuk untuk mengakses Malzz Crash</div>
+            </div>
+            <div style="text-align:right">
+              <div class="muted" id="loggedUser">Not logged</div>
+              <button id="logoutBtn" class="btn danger" style="display:none; font-size:14px;">Logout</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Exploit/Card -->
+        <div class="card" id="exploitCard" aria-hidden="true" style="display:none">
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <div style="font-weight:700">Bug Wangsaf</div>
+            <div class="muted">Sender <span style="color:var(--success); font-weight:600">on</span></div>
+          </div>
+
+          <div style="margin-top:12px">
+            <label class="muted">Select Bug Type</label>
+            <select id="bugType">
+              <option value=""> PILIH TYPE BUG </option>
+              <option value="delay">1. Delay Hard</option>
+              <option value="blank">2. Blank Wangsaf</option>
+              <option value="forclose">3. Force Close</option>
+              <option value="bulldozer">4. Bulldozer </option>
+            </select>
+
+            <label class="muted" style="margin-top:10px">Target Number (dengan kode negara)</label>
+            <input id="targetNumber" placeholder="contoh: 6281234567890">
+
+            <div class="row" style="margin-top:10px">
+              <button id="executeBtn" class="btn danger">Serang</button>
+              <button id="copyBtn" class="btn ghost" title="Copy last result">Copy Log</button>
+            </div>
+
+            <div class="status status-success" id="statusBox">Status: Sender on</div>
+
+            <div class="progress" id="progWrap" style="display:none">
+              <i id="progBar"></i>
+            </div>
+          </div>
+        </div>
+
+        <!-- Logs -->
+        <div class="card">
+          <div style="display:flex; justify-content:space-between; align-items:center">
+            <div style="font-weight:700">Activity Log</div>
+            <div class="muted small">Hallo bang</div>
+          </div>
+          <div id="logArea" style="margin-top:10px; max-height:160px; overflow-y:auto; font-size:13px; color:var(--muted);">
+            <!-- logs here -->
+          </div>
+        </div>
+      </div>
+
+      <!-- RIGHT: Admin + Users -->
+      <div class="side">
+        <!-- Login card (MODIFIED SECTION) -->
+        <div class="card" id="loginCard">
+          <div style="font-weight:800; font-size:22px; margin-bottom:10px;">SELAMAT DATANG DI WEB MALZZ CRASH</div>
+          <div class="muted" style="margin-top:6px; font-size:16px;">Masukkan username dan password</div>
+          <input id="loginUsername" placeholder="Username" style="font-size:16px; padding:14px;">
+          <input id="loginPassword" type="password" placeholder="Password" style="font-size:16px; padding:14px;">
+          <div class="row">
+            <button id="loginBtn" class="btn" style="font-size:18px; padding:16px 20px; width:100%;">LOGIN</button>
+          </div>
+          <div class="muted" id="loginMsg" style="margin-top:8px; font-size:14px;"></div>
+        </div>
+
+        <!-- Admin panel -->
+        <div class="card" id="adminCard" style="display:none">
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <div style="font-weight:700">Administrator Panel</div>
+            <div class="muted small">Manage users</div>
+          </div>
+
+          <div style="margin-top:10px">
+            <input id="newUser" placeholder="New username">
+            <input id="newPass" type="password" placeholder="New password" style="margin-top:8px">
+            <label class="muted" style="display:flex; align-items:center; gap:8px; margin-top:8px"><input id="makeAdmin" type="checkbox"> Make admin</label>
+            <button id="addUserBtn" class="btn" style="margin-top:10px">Add User</button>
+          </div>
+
+          <div style="margin-top:12px">
+            <div style="font-weight:700; margin-bottom:6px">User List</div>
+            <table id="userTable">
+              <!-- populated by JS -->
+            </table>
+          </div>
+        </div>
+
+        <!-- small help card -->
+        <div class="card">
+          <div style="font-weight:700">Info</div>
+          <div class="muted" style="margin-top:8px; font-size:13px">note: jangan salah gunakan bug pada orang yang tidak bersalah.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Success message element -->
+  <div id="successMessage" class="success-message" aria-hidden="true">
+    <span>✅ Sukses menjalankan bug!</span>
+  </div>
+
+  <!-- Modals -->
+  <div id="editUserModal" class="modal" aria-hidden="true">
+    <div class="modal-card">
+      <div style="font-weight:800; font-size:18px">Edit User</div>
+      <input id="editUsername" placeholder="Username baru">
+      <div class="row" style="margin-top:10px">
+        <button class="btn" id="saveUserBtn">Simpan</button>
+        <button class="btn ghost" onclick="closeModal('editUserModal')">Batal</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="editPassModal" class="modal" aria-hidden="true">
+    <div class="modal-card">
+      <div style="font-weight:800; font-size:18px">Edit Password</div>
+      <input id="editPassword" type="password" placeholder="Password baru">
+      <div class="row" style="margin-top:10px">
+        <button class="btn" id="savePassBtn">Simpan</button>
+        <button class="btn ghost" onclick="closeModal('editPassModal')">Batal</button>
+      </div>
+    </div>
+  </div>
+
+<script>
+/* =========================
+   Data & Initialization
+   ========================= */
+const DEFAULT_USERS = [
+  { username: "admin", password: "admin123", isAdmin: true, protected: true },
+  { username: "malzz", password: "crash2023", isAdmin: false, protected: false }
+];
+
+let users = JSON.parse(localStorage.getItem('mc_users') || 'null') || DEFAULT_USERS.slice();
+let currentUser = null;
+let editingIndex = null;
+let lastLog = '';
+
+const $ = id => document.getElementById(id);
+
+/* Stars generation */
+(function makeStars(){
+  const starLayer = document.querySelector('.stars');
+  if(!starLayer) return;
+  const count = 40;
+  for(let i=0;i<count;i++){
+    const s = document.createElement('div');
+    s.className='star';
+    const size = Math.random()*2 + 1;
+    s.style.width = s.style.height = size + 'px';
+    s.style.left = (Math.random()*100) + '%';
+    s.style.top = (Math.random()*100) + '%';
+    s.style.opacity = 0.4 + Math.random()*0.8;
+    s.style.animationDuration = (3 + Math.random()*6) + 's';
+    starLayer.appendChild(s);
+  }
+})();
+
+/* =========================
+   Helpers
+   ========================= */
+function saveUsers(){ localStorage.setItem('mc_users', JSON.stringify(users)); }
+function log(msg){
+  const area = $('logArea');
+  const t = new Date().toLocaleTimeString();
+  const line = `[${t}] ${msg}`;
+  area.insertAdjacentHTML('afterbegin', `<div style="padding:6px 0;border-bottom:1px dashed rgba(255,255,255,0.02)">${line}</div>`);
+  lastLog = line;
+}
+
+/* =========================
+   Auth: login/logout
+   ========================= */
+$('loginBtn').addEventListener('click', doLogin);
+
+$('logoutBtn').addEventListener('click', ()=> {
+  currentUser = null;
+  $('loginCard').style.display = '';
+  $('adminCard').style.display = 'none';
+  $('exploitCard').style.display = 'none';
+  $('logoutBtn').style.display = 'none';
+  $('loggedUser').textContent = 'Not logged';
+  $('subInfo').textContent = 'Masuk untuk mengakses panel administrator';
+  log('User logged out');
+});
+
+function doLogin(){
+  const u = $('loginUsername').value.trim();
+  const p = $('loginPassword').value;
+  const user = users.find(x => x.username === u && x.password === p);
+  if(!user){
+    $('loginMsg').textContent = 'Username atau password salah';
+    return;
+  }
+  currentUser = user;
+  onLoginSuccess();
+}
+
+function onLoginSuccess(){
+  $('loginMsg').textContent = '';
+  $('loginCard').style.display = 'none';
+  $('adminCard').style.display = currentUser.isAdmin ? '' : 'none';
+  $('exploitCard').style.display = '';
+  $('logoutBtn').style.display = '';
+  $('loggedUser').textContent = `@${currentUser.username}${currentUser.isAdmin ? ' (Admin)' : ''}`;
+  $('subInfo').textContent = 'Dashboard aktif';
+  log(`User logged in: ${currentUser.username}`);
+  renderUserTable();
+}
+
+/* =========================
+   User management
+   ========================= */
+$('addUserBtn').addEventListener('click', ()=>{
+  const name = $('newUser').value.trim();
+  const pass = $('newPass').value;
+  const isAdmin = $('makeAdmin').checked;
+  if(!name || !pass){ alert('Masukkan username & password'); return; }
+  if(users.some(u => u.username === name)){ alert('Username sudah ada'); return; }
+  users.push({username:name, password:pass, isAdmin: !!isAdmin, protected:false});
+  saveUsers(); $('newUser').value=''; $('newPass').value=''; $('makeAdmin').checked=false;
+  renderUserTable(); log(`Added user ${name}`);
+});
+
+function renderUserTable(){
+  const tbody = [];
+  tbody.push('<thead><tr><th>Username</th><th>Role</th><th>Actions</th></tr></thead><tbody>');
+  users.forEach((u,i)=>{
+    const role = u.isAdmin ? 'Admin' : 'User';
+    let actions = '';
+    if(!currentUser || !currentUser.isAdmin){
+      actions = u.protected ? 'Protected' : 'No permissions';
+    } else if(u.protected){
+      actions = 'Protected';
+    } else {
+      actions = `<button class="btn ghost" onclick="openEdit(${i})">Edit</button>
+                 <button class="btn ghost" onclick="openEditPass(${i})">Edit Pass</button>
+                 <button class="btn ghost" onclick="toggleAdmin(${i})">${u.isAdmin? 'Remove Admin':'Make Admin'}</button>
+                 <button class="btn ghost" onclick="deleteUser(${i})">Delete</button>`;
+    }
+    tbody.push(`<tr><td>${u.username}</td><td>${role}</td><td>${actions}</td></tr>`);
+  });
+  tbody.push('</tbody>');
+  $('userTable').innerHTML = tbody.join('');
+}
+
+/* Open edit modal */
+function openEdit(index){
+  editingIndex = index;
+  $('editUsername').value = users[index].username;
+  openModal('editUserModal');
+}
+function openEditPass(index){
+  editingIndex = index;
+  $('editPassword').value = '';
+  openModal('editPassModal');
+}
+
+$('saveUserBtn').addEventListener('click', ()=>{
+  const v = $('editUsername').value.trim();
+  if(!v){ alert('Masukkan username'); return; }
+  users[editingIndex].username = v;
+  saveUsers(); closeModal('editUserModal'); renderUserTable();
+  log(`Username updated at index ${editingIndex} -> ${v}`);
+});
+
+$('savePassBtn').addEventListener('click', ()=>{
+  const v = $('editPassword').value;
+  if(!v){ alert('Password kosong'); return; }
+  users[editingIndex].password = v;
+  saveUsers(); closeModal('editPassModal'); renderUserTable();
+  log(`Password updated for ${users[editingIndex].username}`);
+});
+
+function toggleAdmin(i){
+  users[i].isAdmin = !users[i].isAdmin;
+  saveUsers(); renderUserTable(); log(`Toggled admin for ${users[i].username} -> ${users[i].isAdmin}`);
+}
+function deleteUser(i){
+  if(!confirm(`Hapus user ${users[i].username}?`)) return;
+  const name = users[i].username;
+  users.splice(i,1); saveUsers(); renderUserTable(); log(`Deleted user ${name}`);
+}
+
+/* Modal helpers */
+function openModal(id){
+  const el = document.getElementById(id);
+  if(!el) return;
+  el.classList.add('show');
+  el.style.display = 'flex';
+}
+function closeModal(id){
+  const el = document.getElementById(id);
+  if(!el) return;
+  el.classList.remove('show');
+  el.style.display = 'none';
+}
+
+/* =========================
+   Exploit simulation with new animations
+   ========================= */
+$('executeBtn').addEventListener('click', ()=> {
+  const type = $('bugType').value;
+  const target = $('targetNumber').value.trim();
+  if(!type){ setStatus('Pilih Type bug terlebih dahulu', 'default'); return; }
+  if(!target){ setStatus('Masukkan nomor target', 'default'); return; }
+
+  // Animasi tombol
+  const btn = $('executeBtn');
+  btn.classList.add('success-pulse');
+  setTimeout(() => btn.classList.remove('success-pulse'), 2000);
+
+  // Tampilkan pesan sukses
+  const successMsg = $('successMessage');
+  successMsg.textContent = '✅ Sukses menjalankan bug!';
+  successMsg.classList.add('show');
+  
+  // start simulated execution
+  setStatus(`Menjalankan ${type} ke ${target}...`, 'default');
+  $('progWrap').style.display = '';
+  const bar = $('progBar');
+  bar.style.width = '0%';
+  let pct = 0;
+  const step = 5 + Math.floor(Math.random()*15);
+  const id = setInterval(()=>{
+    pct = Math.min(100, pct + step);
+    bar.style.width = pct + '%';
+    if(pct >= 100){
+      clearInterval(id);
+      setTimeout(()=>{
+        setStatus(`Sender on`, 'success'); // Kembali ke status awal
+        $('progWrap').style.display = 'none';
+        bar.style.width = '0%';
+        // produce fake result object but no actionable data or network
+        const fakeResult = {
+          status: "success",
+          exploit: type,
+          target: target,
+          note: "ACTION COMPLETED"
+        };
+        log(`Executed: ${JSON.stringify(fakeResult)}`);
+        console.log("PAYLOAD:", fakeResult);
+        
+        // Sembunyikan pesan sukses setelah 5 detik
+        setTimeout(() => {
+          successMsg.classList.remove('show');
+        }, 5000);
+      }, 650);
+    }
+  }, 300);
+});
+
+/* copy last log */
+$('copyBtn').addEventListener('click', ()=>{
+  if(!lastLog){ alert('No logs yet'); return; }
+  navigator.clipboard?.writeText(lastLog).then(()=> alert('Last log copied')).catch(()=> alert('Copy failed'));
+});
+
+/* helpers */
+function setStatus(s, type = 'default'){
+  const statusBox = $('statusBox');
+  statusBox.textContent = 'Status: ' + s;
+  
+  // Reset semua kelas warna
+  statusBox.classList.remove('status-success', 'status-default');
+  
+  // Tambahkan kelas sesuai type
+  if(type === 'success') {
+    statusBox.classList.add('status-success');
+  } else {
+    statusBox.classList.add('status-default');
+  }
+}
+
+/* initial render */
+(function init(){
+  renderUserTable();
+  setStatus('Sender on', 'success');
+  // expose some aliases for modal save buttons (they are created earlier)
+  // ensure modal elements are wired even if not displayed initially
+  // Show/hide elements by IDs used
+  // Make sure elements referenced exist; set styles
+  if(!$('progWrap')){ /* create alias if not present */ }
+  // Map IDs used in script to existing element IDs in markup
+  // Add shortcuts: ensure modal event binding already set above
+  // Hide initial elements
+  $('adminCard').style.display = 'none';
+  $('exploitCard').style.display = 'none';
+  $('logoutBtn').style.display = 'none';
+
+  // create references used in script: progWrap/progBar
+  if(!$('progWrap')){
+    const pw = document.createElement('div'); pw.className='progress'; pw.id='progWrap'; pw.style.display='none';
+    const inner = document.createElement('i'); inner.id='progBar'; pw.appendChild(inner);
+    document.querySelector('#exploitCard > div:nth-child(1)').after(pw);
+  } else {
+    $('progWrap').style.display = 'none';
+  }
+})();
+</script>
+</body>
+</html>
